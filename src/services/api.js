@@ -54,7 +54,8 @@ api.interceptors.response.use(
         filaEspera = []
         localStorage.removeItem('access_token')
         localStorage.removeItem('usuario')
-        window.location.href = '/'
+        const redirectTo = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/'
+        window.location.href = redirectTo
         return Promise.reject(error)
       } finally {
         renovando = false
@@ -65,5 +66,15 @@ api.interceptors.response.use(
   }
 )
 
+function resolveMediaUrl(value) {
+  if (!value) return null
+
+  try {
+    return new URL(value, BASE_URL).toString()
+  } catch {
+    return value
+  }
+}
+
 export default api
-export { BASE_URL }
+export { BASE_URL, resolveMediaUrl }

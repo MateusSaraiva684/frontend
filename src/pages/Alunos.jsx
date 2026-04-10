@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Toast from '../components/Toast'
 import { useAlunos } from '../hooks/useAlunos'
-import { BASE_URL } from '../services/api'
+import { resolveMediaUrl } from '../services/api'
 
 export default function Alunos() {
   const { alunos, carregando, erro, deletar } = useAlunos()
@@ -53,7 +53,7 @@ export default function Alunos() {
               <div key={aluno.id} className="col-xl-3 col-md-4 col-sm-6">
                 <div className="card shadow-sm h-100" style={{ borderRadius: 12, border: 'none' }}>
                   {aluno.foto ? (
-                    <img src={`${BASE_URL}${aluno.foto}`} className="card-img-top"
+                    <img src={resolveMediaUrl(aluno.foto)} className="card-img-top"
                       style={{ height: 180, objectFit: 'cover', borderRadius: '12px 12px 0 0' }}
                       alt={aluno.nome} />
                   ) : (

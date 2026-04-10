@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAlunos } from '../hooks/useAlunos'
 import { useAuth } from '../services/AuthContext'
-import { BASE_URL } from '../services/api'
+import { resolveMediaUrl } from '../services/api'
 
 function Card({ titulo, valor, cor }) {
   return (
@@ -66,7 +66,7 @@ export default function Dashboard() {
                   <tr key={aluno.id}>
                     <td>
                       {aluno.foto
-                        ? <img src={`${BASE_URL}${aluno.foto}`} width={40} height={40}
+                        ? <img src={resolveMediaUrl(aluno.foto)} width={40} height={40}
                             style={{ borderRadius: '50%', objectFit: 'cover' }} alt={aluno.nome} />
                         : <span style={{ fontSize: 28, color: '#d1d5db' }}><i className="fa fa-user-circle"></i></span>
                       }

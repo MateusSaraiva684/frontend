@@ -3,6 +3,7 @@ import { AuthProvider } from './services/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import AdminRoute from './components/AdminRoute'
 import Login from './pages/Login'
+import AdminLogin from './pages/AdminLogin'
 import Alunos from './pages/Alunos'
 import FormAluno from './pages/FormAluno'
 import Dashboard from './pages/Dashboard'
@@ -15,6 +16,7 @@ export default function App() {
         <Routes>
           {/* Rotas normais */}
           <Route path="/" element={<Login />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/alunos" element={<PrivateRoute><Alunos /></PrivateRoute>} />
           <Route path="/alunos/novo" element={<PrivateRoute><FormAluno /></PrivateRoute>} />
           <Route path="/alunos/editar/:id" element={<PrivateRoute><FormAluno /></PrivateRoute>} />

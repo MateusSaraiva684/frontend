@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import api, { BASE_URL } from '../services/api'
+import api, { resolveMediaUrl } from '../services/api'
 import Navbar from '../components/Navbar'
 import Toast from '../components/Toast'
 
@@ -67,7 +67,7 @@ export default function FormAluno() {
     </>
   )
 
-  const fotoExibida = preview || (fotoAtual ? `${BASE_URL}${fotoAtual}` : null)
+  const fotoExibida = preview || resolveMediaUrl(fotoAtual)
 
   return (
     <>

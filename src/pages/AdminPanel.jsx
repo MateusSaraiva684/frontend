@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../services/AuthContext'
-import api, { BASE_URL } from '../services/api'
+import api, { resolveMediaUrl } from '../services/api'
 import Navbar from '../components/Navbar'
 
 // ── Componentes de apoio ──────────────────────────────────────────────────────
@@ -342,7 +342,7 @@ export default function AdminPanel() {
                   <tr key={a.id}>
                     <td className="ps-4">
                       {a.foto
-                        ? <img src={`${BASE_URL}${a.foto}`} width={36} height={36}
+                        ? <img src={resolveMediaUrl(a.foto)} width={36} height={36}
                             style={{ borderRadius: '50%', objectFit: 'cover' }} alt={a.nome} />
                         : <span className="text-secondary"><i className="fa fa-user-circle fa-2x"></i></span>
                       }
@@ -444,7 +444,7 @@ export default function AdminPanel() {
                   style={{ borderBottom: '1px solid #374151' }}>
                   <div className="d-flex align-items-center gap-3">
                     {a.foto
-                      ? <img src={`${BASE_URL}${a.foto}`} width={40} height={40}
+                      ? <img src={resolveMediaUrl(a.foto)} width={40} height={40}
                           style={{ borderRadius: '50%', objectFit: 'cover' }} alt={a.nome} />
                       : <div className="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
                           style={{ width: 40, height: 40 }}>
