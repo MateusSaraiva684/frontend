@@ -57,6 +57,7 @@ export default function Dashboard() {
                 <tr>
                   <th style={{ width: 52 }}>Foto</th>
                   <th>Nome</th>
+                  <th>Inscricao</th>
                   <th>Telefone</th>
                   <th style={{ width: 80 }}>Ação</th>
                 </tr>
@@ -72,6 +73,7 @@ export default function Dashboard() {
                       }
                     </td>
                     <td className="fw-medium">{aluno.nome}</td>
+                    <td className="text-muted">{aluno.numero_inscricao}</td>
                     <td className="text-muted">{aluno.telefone}</td>
                     <td>
                       <Link to={`/alunos/editar/${aluno.id}`} className="btn btn-sm btn-outline-primary">

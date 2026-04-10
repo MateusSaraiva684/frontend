@@ -10,6 +10,7 @@ export default function FormAluno() {
   const editando = Boolean(id)
 
   const [nome, setNome] = useState('')
+  const [numeroInscricao, setNumeroInscricao] = useState('')
   const [telefone, setTelefone] = useState('')
   const [foto, setFoto] = useState(null)
   const [preview, setPreview] = useState(null)
@@ -23,6 +24,7 @@ export default function FormAluno() {
     api.get(`/api/alunos/${id}`)
       .then(({ data }) => {
         setNome(data.nome)
+        setNumeroInscricao(data.numero_inscricao)
         setTelefone(data.telefone)
         setFotoAtual(data.foto)
       })
@@ -43,6 +45,7 @@ export default function FormAluno() {
     setCarregando(true)
     const formData = new FormData()
     formData.append('nome', nome)
+    formData.append('numero_inscricao', numeroInscricao.trim())
     formData.append('telefone', telefone)
     if (foto) formData.append('foto', foto)
 
@@ -96,6 +99,11 @@ export default function FormAluno() {
                   <label className="form-label">Nome <span className="text-danger">*</span></label>
                   <input type="text" className="form-control" required value={nome}
                     onChange={e => setNome(e.target.value)} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Numero de inscricao <span className="text-danger">*</span></label>
+                  <input type="text" className="form-control" required value={numeroInscricao}
+                    onChange={e => setNumeroInscricao(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Telefone <span className="text-danger">*</span></label>

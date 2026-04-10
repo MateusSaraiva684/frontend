@@ -171,8 +171,9 @@ export default function AdminPanel() {
 
   const alunosFiltrados = alunos.filter(a =>
     a.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    a.usuario_nome?.toLowerCase().includes(busca.toLowerCase()) ||
-    a.usuario_email?.toLowerCase().includes(busca.toLowerCase())
+    (a.numero_inscricao || '').toLowerCase().includes(busca.toLowerCase()) ||
+    (a.usuario_nome || '').toLowerCase().includes(busca.toLowerCase()) ||
+    (a.usuario_email || '').toLowerCase().includes(busca.toLowerCase())
   )
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -236,7 +237,7 @@ export default function AdminPanel() {
           <input
             type="text" className="form-control form-control-sm w-auto"
             style={{ background: '#1f2937', color: '#f9fafb', border: '1px solid #374151', minWidth: 220 }}
-            placeholder={aba === 'usuarios' ? 'Buscar por nome ou e-mail...' : 'Buscar por aluno ou escola...'}
+            placeholder={aba === 'usuarios' ? 'Buscar por nome ou e-mail...' : 'Buscar por aluno, inscricao ou escola...'}
             value={busca} onChange={e => setBusca(e.target.value)}
           />
         </div>
@@ -329,6 +330,7 @@ export default function AdminPanel() {
                 <tr>
                   <th className="text-secondary fw-normal py-3 ps-4">Foto</th>
                   <th className="text-secondary fw-normal py-3">Aluno</th>
+                  <th className="text-secondary fw-normal py-3">Inscricao</th>
                   <th className="text-secondary fw-normal py-3">Telefone</th>
                   <th className="text-secondary fw-normal py-3">Escola / Usuário</th>
                   <th className="text-secondary fw-normal py-3">Data</th>
@@ -337,7 +339,7 @@ export default function AdminPanel() {
               </thead>
               <tbody>
                 {alunosFiltrados.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center text-secondary py-4">Nenhum aluno encontrado</td></tr>
+                  <tr><td colSpan={7} className="text-center text-secondary py-4">Nenhum aluno encontrado</td></tr>
                 ) : alunosFiltrados.map(a => (
                   <tr key={a.id}>
                     <td className="ps-4">
@@ -348,6 +350,7 @@ export default function AdminPanel() {
                       }
                     </td>
                     <td className="fw-medium">{a.nome}</td>
+                    <td className="text-secondary">{a.numero_inscricao}</td>
                     <td className="text-secondary">{a.telefone}</td>
                     <td>
                       <div className="small">{a.usuario_nome}</div>
@@ -453,6 +456,7 @@ export default function AdminPanel() {
                     }
                     <div>
                       <div className="text-white small fw-medium">{a.nome}</div>
+                      <div className="text-info" style={{ fontSize: 12 }}>{a.numero_inscricao}</div>
                       <div className="text-secondary" style={{ fontSize: 12 }}>{a.telefone}</div>
                     </div>
                   </div>

@@ -67,6 +67,9 @@ export default function Alunos() {
                   )}
                   <div className="card-body">
                     <h6 className="card-title fw-semibold mb-1">{aluno.nome}</h6>
+                    <p className="small text-primary fw-semibold mb-2">
+                      Inscricao: {aluno.numero_inscricao}
+                    </p>
                     <p className="text-muted small mb-3">
                       <i className="fa fa-phone me-1"></i>{aluno.telefone}
                     </p>
