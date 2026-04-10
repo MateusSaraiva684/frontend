@@ -6,7 +6,6 @@ import Login from './pages/Login'
 import Alunos from './pages/Alunos'
 import FormAluno from './pages/FormAluno'
 import Dashboard from './pages/Dashboard'
-import AdminLogin from './pages/AdminLogin'
 import AdminPanel from './pages/AdminPanel'
 
 export default function App() {
@@ -21,8 +20,7 @@ export default function App() {
           <Route path="/alunos/editar/:id" element={<PrivateRoute><FormAluno /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
 
-          {/* Rotas admin */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* Painel admin — acessível pelo mesmo login */}
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

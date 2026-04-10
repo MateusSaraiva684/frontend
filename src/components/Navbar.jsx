@@ -30,6 +30,7 @@ export default function Navbar() {
           <span className="text-secondary small d-none d-md-inline">{usuario?.nome}</span>
           {link('/alunos', 'Alunos', 'fa-users')}
           {link('/dashboard', 'Dashboard', 'fa-chart-line')}
+          {usuario?.is_superuser && link('/admin', 'Admin', 'fa-shield-alt')}
           <button onClick={handleLogout} className="btn btn-sm btn-outline-danger">
             <i className="fa fa-sign-out-alt me-1"></i>Sair
           </button>
