@@ -12,12 +12,21 @@ export default function FormAluno() {
   const [nome, setNome] = useState('')
   const [numeroInscricao, setNumeroInscricao] = useState('')
   const [telefone, setTelefone] = useState('')
+  const [turma, setTurma] = useState('')
   const [foto, setFoto] = useState(null)
   const [preview, setPreview] = useState(null)
   const [fotoAtual, setFotoAtual] = useState(null)
+  const [turmasExistentes, setTurmasExistentes] = useState([])
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
   const [buscando, setBuscando] = useState(editando)
+
+  // Carrega turmas existentes para o datalist
+  useEffect(() => {
+    api.get('/api/alunos/turmas')
+      .then(({ data }) => setTurmasExistentes(data))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!editando) return
@@ -26,6 +35,7 @@ export default function FormAluno() {
         setNome(data.nome)
         setNumeroInscricao(data.numero_inscricao)
         setTelefone(data.telefone)
+        setTurma(data.turma || '')
         setFotoAtual(data.foto)
       })
       .catch(() => setErro('Aluno não encontrado'))
@@ -47,6 +57,7 @@ export default function FormAluno() {
     formData.append('nome', nome)
     formData.append('numero_inscricao', numeroInscricao.trim())
     formData.append('telefone', telefone)
+    formData.append('turma', turma.trim())
     if (foto) formData.append('foto', foto)
 
     try {
@@ -100,16 +111,38 @@ export default function FormAluno() {
                   <input type="text" className="form-control" required value={nome}
                     onChange={e => setNome(e.target.value)} />
                 </div>
+
                 <div className="mb-3">
-                  <label className="form-label">Numero de inscricao <span className="text-danger">*</span></label>
+                  <label className="form-label">Número de inscrição <span className="text-danger">*</span></label>
                   <input type="text" className="form-control" required value={numeroInscricao}
                     onChange={e => setNumeroInscricao(e.target.value)} />
                 </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Turma</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Ex: 3º Ano A, Turma 5..."
+                    value={turma}
+                    onChange={e => setTurma(e.target.value)}
+                    list="turmas-sugestoes"
+                  />
+                  {/* Sugestões baseadas nas turmas já cadastradas */}
+                  <datalist id="turmas-sugestoes">
+                    {turmasExistentes.map(t => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
+                  <small className="text-muted">Opcional. Digite ou escolha uma turma existente.</small>
+                </div>
+
                 <div className="mb-3">
                   <label className="form-label">Telefone <span className="text-danger">*</span></label>
                   <input type="text" className="form-control" required value={telefone}
                     onChange={e => setTelefone(e.target.value)} />
                 </div>
+
                 <div className="mb-4">
                   <label className="form-label">
                     {editando ? 'Nova foto' : 'Foto'}
@@ -119,6 +152,7 @@ export default function FormAluno() {
                     accept="image/jpeg,image/png,image/webp"
                     onChange={handleFoto} />
                 </div>
+
                 <div className="d-flex justify-content-between">
                   <Link to="/alunos" className="btn btn-secondary">
                     <i className="fa fa-arrow-left me-1"></i>Voltar
