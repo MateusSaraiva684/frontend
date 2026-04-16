@@ -24,7 +24,7 @@ export default function Login() {
       await login(loginForm.email, loginForm.senha)
       navigate(destino, { replace: true })
     } catch (err) {
-      setErro(err.response?.data?.erro || 'Erro ao fazer login')
+      setErro(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao fazer login')
     } finally {
       setCarregando(false)
     }
@@ -41,7 +41,7 @@ export default function Login() {
       setAba('login')
       setRegForm({ nome: '', email: '', senha: '' })
     } catch (err) {
-      setErro(err.response?.data?.erro || 'Erro ao criar conta')
+      setErro(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao criar conta')
     } finally {
       setCarregando(false)
     }
