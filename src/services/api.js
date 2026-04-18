@@ -5,12 +5,17 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,  // envia cookies em TODAS as requisições (necessário para cross-origin)
+  timeout: 30000,  // 30 segundos de timeout
 })
 
 // ── Injeta access token em todas as requisições ───────────────────────────────
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  try {
+    const token = localStorage.getItem('access_token')
+    if (token) config.headers.Authorization = `Bearer ${token}`
+  } catch (e) {
+    console.warn('localStorage nao disponivel:', e)
+  }
   return config
 })
 
@@ -42,7 +47,11 @@ api.interceptors.response.use(
         // withCredentials já está no default da instância, mas reforçamos aqui
         const resp = await api.post('/api/auth/refresh')
         const novoToken = resp.data.access_token
-        localStorage.setItem('access_token', novoToken)
+        try {
+          localStorage.setItem('access_token', novoToken)
+        } catch (e) {
+          console.warn('localStorage nao disponivel:', e)
+        }
 
         filaEspera.forEach(({ resolve }) => resolve(novoToken))
         filaEspera = []
@@ -52,8 +61,12 @@ api.interceptors.response.use(
       } catch {
         filaEspera.forEach(({ reject }) => reject(error))
         filaEspera = []
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('usuario')
+        try {
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('usuario')
+        } catch (e) {
+          console.warn('localStorage nao disponivel:', e)
+        }
         const redirectTo = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/'
         window.location.href = redirectTo
         return Promise.reject(error)

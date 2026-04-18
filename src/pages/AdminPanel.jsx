@@ -101,7 +101,7 @@ export default function AdminPanel() {
       setModalEditar(null)
       mostrarToast('Usuário atualizado com sucesso')
     } catch (err) {
-      mostrarToast(err.response?.data?.erro || 'Erro ao salvar', 'danger')
+      mostrarToast(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao salvar', 'danger')
     } finally {
       setSalvando(false)
     }
@@ -123,7 +123,7 @@ export default function AdminPanel() {
       setModalSenha(null)
       mostrarToast('Senha redefinida com sucesso')
     } catch (err) {
-      mostrarToast(err.response?.data?.erro || 'Erro ao redefinir senha', 'danger')
+      mostrarToast(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao redefinir senha', 'danger')
     } finally {
       setSalvando(false)
     }

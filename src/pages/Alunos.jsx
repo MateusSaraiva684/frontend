@@ -17,12 +17,12 @@ export default function Alunos() {
     busca,
   })
 
-  // Carrega lista de turmas disponíveis
+  // Carrega lista de turmas disponíveis (apenas uma vez)
   useEffect(() => {
     api.get('/api/alunos/turmas')
       .then(({ data }) => setTurmas(data))
       .catch(() => {})
-  }, [alunos]) // atualiza quando alunos mudam (nova turma cadastrada)
+  }, [])
 
   async function handleDeletar(id, nome) {
     if (!confirm(`Remover ${nome}?`)) return
@@ -168,7 +168,11 @@ export default function Alunos() {
                     <p className="text-muted small mb-3">
                       <i className="fa fa-phone me-1"></i>{aluno.telefone}
                     </p>
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-2 flex-wrap">
+                      <Link to={`/presencas?aluno=${aluno.id}`}
+                        className="btn btn-success btn-sm flex-fill">
+                        <i className="fa fa-clipboard-check me-1"></i>Presenca
+                      </Link>
                       <Link to={`/alunos/editar/${aluno.id}`}
                         className="btn btn-warning btn-sm flex-fill">
                         <i className="fa fa-edit me-1"></i>Editar

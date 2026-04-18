@@ -42,9 +42,18 @@ export default function FormAluno() {
       .finally(() => setBuscando(false))
   }, [id, editando])
 
+  // Cleanup de URL do preview quando desmontar
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview)
+    }
+  }, [])
+
   function handleFoto(e) {
     const arquivo = e.target.files[0]
     if (!arquivo) return
+    // Revogar URL anterior antes de criar uma nova
+    if (preview) URL.revokeObjectURL(preview)
     setFoto(arquivo)
     setPreview(URL.createObjectURL(arquivo))
   }
@@ -54,9 +63,9 @@ export default function FormAluno() {
     setErro('')
     setCarregando(true)
     const formData = new FormData()
-    formData.append('nome', nome)
+    formData.append('nome', nome.trim())
     formData.append('numero_inscricao', numeroInscricao.trim())
-    formData.append('telefone', telefone)
+    formData.append('telefone', telefone.trim())
     formData.append('turma', turma.trim())
     if (foto) formData.append('foto', foto)
 
@@ -68,7 +77,7 @@ export default function FormAluno() {
       }
       navigate('/alunos')
     } catch (err) {
-      setErro(err.response?.data?.erro || 'Erro ao salvar')
+      setErro(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao salvar')
     } finally {
       setCarregando(false)
     }

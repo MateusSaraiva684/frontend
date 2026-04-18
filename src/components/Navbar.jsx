@@ -29,6 +29,8 @@ export default function Navbar() {
         <div className="d-flex align-items-center gap-2">
           <span className="text-secondary small d-none d-md-inline">{usuario?.nome}</span>
           {link('/alunos', 'Alunos', 'fa-users')}
+          {link('/presencas', 'Presencas', 'fa-clipboard-check')}
+          {link('/reconhecimento', 'Facial', 'fa-camera')}
           {link('/dashboard', 'Dashboard', 'fa-chart-line')}
           {usuario?.is_superuser && link('/admin', 'Admin', 'fa-shield-alt')}
           <button onClick={handleLogout} className="btn btn-sm btn-outline-danger">

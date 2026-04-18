@@ -8,6 +8,8 @@ import Alunos from './pages/Alunos'
 import FormAluno from './pages/FormAluno'
 import Dashboard from './pages/Dashboard'
 import AdminPanel from './pages/AdminPanel'
+import Presencas from './pages/Presencas'
+import Reconhecimento from './pages/Reconhecimento'
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
           <Route path="/alunos/novo" element={<PrivateRoute><FormAluno /></PrivateRoute>} />
           <Route path="/alunos/editar/:id" element={<PrivateRoute><FormAluno /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/presencas" element={<PrivateRoute><Presencas /></PrivateRoute>} />
+          <Route path="/reconhecimento" element={<PrivateRoute><Reconhecimento /></PrivateRoute>} />
 
           {/* Painel admin — acessível pelo mesmo login */}
           <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
