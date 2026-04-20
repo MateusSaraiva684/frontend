@@ -14,7 +14,8 @@ export function useAlunos({ turma = '', busca = '' } = {}) {
       if (turma) params.turma = turma
       if (busca.trim()) params.busca = busca.trim()
       const { data } = await api.get('/api/alunos/', { params })
-      setAlunos(data)
+      // Extrai alunos da resposta paginada: { data: [...], paginacao: {...} }
+      setAlunos(data.data || data)
     } catch {
       setErro('Não foi possível carregar os alunos.')
     } finally {
