@@ -15,6 +15,7 @@ export default function Login() {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const [tentarNovoEm, setTentarNovoEm] = useState(null)
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -24,7 +25,26 @@ export default function Login() {
       await login(loginForm.email, loginForm.senha)
       navigate(destino, { replace: true })
     } catch (err) {
-      setErro(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao fazer login')
+      // Tratamento específico para rate limit
+      if (err.status === 429) {
+        const segundos = err.retryAfter || 60
+        setTentarNovoEm(segundos)
+        setErro(`⏱️ Muitas tentativas. Tente novamente em ${segundos}s`)
+        
+        // Countdown do rate limit
+        const interval = setInterval(() => {
+          setTentarNovoEm(prev => {
+            if (prev <= 1) {
+              clearInterval(interval)
+              setErro('')
+              return null
+            }
+            return prev - 1
+          })
+        }, 1000)
+      } else {
+        setErro(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao fazer login')
+      }
     } finally {
       setCarregando(false)
     }
@@ -41,7 +61,26 @@ export default function Login() {
       setAba('login')
       setRegForm({ nome: '', email: '', senha: '' })
     } catch (err) {
-      setErro(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao criar conta')
+      // Tratamento específico para rate limit
+      if (err.status === 429) {
+        const segundos = err.retryAfter || 60
+        setTentarNovoEm(segundos)
+        setErro(`⏱️ Muitas requisições. Tente novamente em ${segundos}s`)
+        
+        // Countdown do rate limit
+        const interval = setInterval(() => {
+          setTentarNovoEm(prev => {
+            if (prev <= 1) {
+              clearInterval(interval)
+              setErro('')
+              return null
+            }
+            return prev - 1
+          })
+        }, 1000)
+      } else {
+        setErro(err.response?.data?.detail || err.response?.data?.erro || 'Erro ao criar conta')
+      }
     } finally {
       setCarregando(false)
     }
@@ -93,8 +132,13 @@ export default function Login() {
                         value={loginForm.senha}
                         onChange={e => setLoginForm({ ...loginForm, senha: e.target.value })} />
                     </div>
-                    <button type="submit" className="btn btn-primary w-100" disabled={carregando}>
-                      {carregando ? <><span className="spinner-border spinner-border-sm me-2"></span>Entrando...</> : 'Entrar'}
+                    <button type="submit" className="btn btn-primary w-100" disabled={carregando || tentarNovoEm}>
+                      {carregando 
+                        ? <><span className="spinner-border spinner-border-sm me-2"></span>Entrando...</> 
+                        : tentarNovoEm
+                        ? <><i className="fa fa-hourglass-end me-2"></i>Aguarde {tentarNovoEm}s</>
+                        : 'Entrar'
+                      }
                     </button>
                   </form>
                 ) : (
@@ -117,8 +161,13 @@ export default function Login() {
                         value={regForm.senha}
                         onChange={e => setRegForm({ ...regForm, senha: e.target.value })} />
                     </div>
-                    <button type="submit" className="btn btn-success w-100" disabled={carregando}>
-                      {carregando ? <><span className="spinner-border spinner-border-sm me-2"></span>Criando...</> : 'Criar conta'}
+                    <button type="submit" className="btn btn-success w-100" disabled={carregando || tentarNovoEm}>
+                      {carregando 
+                        ? <><span className="spinner-border spinner-border-sm me-2"></span>Criando...</> 
+                        : tentarNovoEm
+                        ? <><i className="fa fa-hourglass-end me-2"></i>Aguarde {tentarNovoEm}s</>
+                        : 'Criar conta'
+                      }
                     </button>
                   </form>
                 )}

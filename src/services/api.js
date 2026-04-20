@@ -28,7 +28,20 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
     const isAuthRota = original?.url?.includes('/api/auth/')
+    
+    // ── Tratamento específico para rate limit (429) ──────────────────────────
+    if (error.response?.status === 429) {
+      const retryAfter = error.response?.headers?.['retry-after'] || 60
+      const errorMsg = error.response?.data?.erro || `Muitas requisições. Tente novamente em ${retryAfter}s`
+      
+      // Criar erro personalizado para rate limit
+      const rateLimitError = new Error(errorMsg)
+      rateLimitError.status = 429
+      rateLimitError.retryAfter = parseInt(retryAfter)
+      return Promise.reject(rateLimitError)
+    }
 
+    // ── Tratamento de token expirado (401) ──────────────────────────────────
     if (error.response?.status === 401 && !isAuthRota && !original._retry) {
       original._retry = true
 

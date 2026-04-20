@@ -10,6 +10,7 @@ export default function AdminLogin() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const [tentarNovoEm, setTentarNovoEm] = useState(null)
 
   if (usuario?.is_superuser) return <Navigate to="/admin" replace />
   if (usuario) return <Navigate to="/alunos" replace />
@@ -31,7 +32,26 @@ export default function AdminLogin() {
       const destino = location.state?.from?.pathname || '/admin'
       navigate(destino, { replace: true })
     } catch (err) {
-      setErro(err.response?.data?.erro || 'Credenciais inválidas')
+      // Tratamento específico para rate limit
+      if (err.status === 429) {
+        const segundos = err.retryAfter || 60
+        setTentarNovoEm(segundos)
+        setErro(`⏱️ Muitas tentativas. Tente novamente em ${segundos}s`)
+        
+        // Countdown do rate limit
+        const interval = setInterval(() => {
+          setTentarNovoEm(prev => {
+            if (prev <= 1) {
+              clearInterval(interval)
+              setErro('')
+              return null
+            }
+            return prev - 1
+          })
+        }, 1000)
+      } else {
+        setErro(err.response?.data?.erro || 'Credenciais inválidas')
+      }
     } finally {
       setCarregando(false)
     }
@@ -73,9 +93,11 @@ export default function AdminLogin() {
                     required
                   />
                 </div>
-                <button type="submit" className="btn btn-warning w-100 fw-semibold" disabled={carregando}>
+                <button type="submit" className="btn btn-warning w-100 fw-semibold" disabled={carregando || tentarNovoEm}>
                   {carregando
                     ? <><span className="spinner-border spinner-border-sm me-2"></span>Entrando...</>
+                    : tentarNovoEm
+                    ? <><i className="fa fa-hourglass-end me-2"></i>Aguarde {tentarNovoEm}s</>
                     : <><i className="fa fa-lock me-2"></i>Entrar</>}
                 </button>
               </form>

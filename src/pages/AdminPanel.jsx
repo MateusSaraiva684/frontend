@@ -76,7 +76,8 @@ export default function AdminPanel() {
       ])
       setStats(s.data)
       setUsuarios(u.data)
-      setAlunos(a.data)
+      // O endpoint /api/admin/alunos agora retorna paginação: { data: [...], paginacao: {...} }
+      setAlunos(a.data.data || a.data)
     } finally {
       setCarregando(false)
     }
