@@ -48,6 +48,7 @@ export default function AdminPanel() {
   const [usuarios, setUsuarios] = useState([])
   const [alunos, setAlunos] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState('')
   const [busca, setBusca] = useState('')
   const [toast, setToast] = useState(null)
 
@@ -68,6 +69,7 @@ export default function AdminPanel() {
 
   async function carregar() {
     setCarregando(true)
+    setErro('')
     try {
       const [s, u, a] = await Promise.all([
         api.get('/api/admin/stats'),
@@ -75,9 +77,16 @@ export default function AdminPanel() {
         api.get('/api/admin/alunos'),
       ])
       setStats(s.data)
-      setUsuarios(u.data)
-      // O endpoint /api/admin/alunos agora retorna paginação: { data: [...], paginacao: {...} }
-      setAlunos(a.data.data || a.data)
+      setUsuarios(u.data || [])
+      // O endpoint /api/admin/alunos retorna paginação: { data: [...], paginacao: {...} }
+      // Extrai o array de alunos com validação robusta
+      const alunosArray = Array.isArray(a.data) ? a.data : (a.data?.data || [])
+      console.log('[AdminPanel] Alunos carregados:', alunosArray.length)
+      setAlunos(alunosArray)
+    } catch (err) {
+      const msg = err.response?.data?.erro || err.message || 'Erro ao carregar dados'
+      setErro(msg)
+      console.error('[AdminPanel] Erro:', msg, err)
     } finally {
       setCarregando(false)
     }
@@ -193,6 +202,14 @@ export default function AdminPanel() {
       )}
 
       <div className="container-fluid px-4 py-4">
+
+        {/* Mensagem de erro */}
+        {erro && (
+          <div className="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i className="fa fa-exclamation-circle me-2"></i>{erro}
+            <button type="button" className="btn-close" onClick={() => setErro('')}></button>
+          </div>
+        )}
 
         {/* Cabeçalho */}
         <div className="d-flex align-items-center gap-2 mb-4">
