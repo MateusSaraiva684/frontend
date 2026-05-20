@@ -46,6 +46,8 @@ export default function AdminPanel() {
   const [aba, setAba] = useState('usuarios')
   const [stats, setStats] = useState(null)
   const [usuarios, setUsuarios] = useState([])
+  const [escolas, setEscolas] = useState([])
+  const [escolaSelecionada, setEscolaSelecionada] = useState(null)
   const [alunos, setAlunos] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -71,18 +73,16 @@ export default function AdminPanel() {
     setCarregando(true)
     setErro('')
     try {
-      const [s, u, a] = await Promise.all([
+      const [s, u, e] = await Promise.all([
         api.get('/api/admin/stats'),
         api.get('/api/admin/usuarios'),
-        api.get('/api/admin/alunos'),
+        api.get('/api/admin/escolas'),
       ])
       setStats(s.data)
       setUsuarios(u.data || [])
-      // O endpoint /api/admin/alunos retorna paginação: { data: [...], paginacao: {...} }
-      // Extrai o array de alunos com validação robusta
-      const alunosArray = Array.isArray(a.data) ? a.data : (a.data?.data || [])
-      console.log('[AdminPanel] Alunos carregados:', alunosArray.length)
-      setAlunos(alunosArray)
+      setEscolas(e.data || [])
+      setEscolaSelecionada(null)
+      setAlunos([])
     } catch (err) {
       const msg = err.response?.data?.erro || err.message || 'Erro ao carregar dados'
       setErro(msg)
@@ -149,7 +149,9 @@ export default function AdminPanel() {
     if (!confirm(`Remover permanentemente o usuário "${nome}" e todos os seus alunos?`)) return
     await api.delete(`/api/admin/usuarios/${id}`)
     setUsuarios(prev => prev.filter(u => u.id !== id))
-    setAlunos(prev => prev.filter(a => a.user_id !== id))
+    setEscolas(prev => prev.filter(e => e.id !== id))
+    setEscolaSelecionada(prev => prev?.id === id ? null : prev)
+    setAlunos(prev => prev.filter(a => a.empresa_id !== id && a.user_id !== id))
     const { data } = await api.get('/api/admin/stats')
     setStats(data)
     mostrarToast('Usuário removido')
@@ -160,16 +162,36 @@ export default function AdminPanel() {
   async function deletarAluno(id, nome) {
     if (!confirm(`Remover o aluno "${nome}"?`)) return
     await api.delete(`/api/admin/alunos/${id}`)
+    const empresaId = escolaSelecionada?.id ?? modalAlunos?.usuario?.id
     setAlunos(prev => prev.filter(a => a.id !== id))
+    setUsuarios(prev => prev.map(u => u.id === empresaId ? { ...u, total_alunos: Math.max((u.total_alunos || 1) - 1, 0) } : u))
+    setEscolas(prev => prev.map(e => e.id === empresaId ? { ...e, total_alunos: Math.max((e.total_alunos || 1) - 1, 0) } : e))
     if (modalAlunos) setModalAlunos(prev => ({ ...prev, lista: prev.lista.filter(a => a.id !== id) }))
     const { data } = await api.get('/api/admin/stats')
     setStats(data)
     mostrarToast('Aluno removido')
   }
 
+  async function carregarAlunosDaEscola(escola, abrirModal = false) {
+    if (!escola || escola.is_superuser) return
+    setErro('')
+    try {
+      const { data } = await api.get(`/api/admin/escolas/${escola.id}/alunos`)
+      const lista = Array.isArray(data) ? data : (data?.data || [])
+      setEscolaSelecionada(escola)
+      setAlunos(lista)
+      if (abrirModal) {
+        setModalAlunos({ usuario: escola, lista })
+      } else {
+        setAba('alunos')
+      }
+    } catch (err) {
+      mostrarToast(err.response?.data?.erro || 'Erro ao carregar alunos da escola', 'danger')
+    }
+  }
+
   function verAlunosDoUsuario(u) {
-    const lista = alunos.filter(a => a.user_id === u.id)
-    setModalAlunos({ usuario: u, lista })
+    carregarAlunosDaEscola(u, true)
   }
 
   // ── Filtros ─────────────────────────────────────────────────────────────────
@@ -177,6 +199,11 @@ export default function AdminPanel() {
   const usuariosFiltrados = usuarios.filter(u =>
     u.nome.toLowerCase().includes(busca.toLowerCase()) ||
     u.email.toLowerCase().includes(busca.toLowerCase())
+  )
+
+  const escolasFiltradas = escolas.filter(e =>
+    e.nome.toLowerCase().includes(busca.toLowerCase()) ||
+    e.email.toLowerCase().includes(busca.toLowerCase())
   )
 
   const alunosFiltrados = alunos.filter(a =>
@@ -249,13 +276,13 @@ export default function AdminPanel() {
             </button>
             <button onClick={() => { setAba('alunos'); setBusca('') }}
               className={`btn btn-sm ${aba === 'alunos' ? 'btn-warning' : 'btn-outline-secondary'}`}>
-              <i className="fa fa-user-graduate me-1"></i>Todos os alunos ({alunos.length})
+              <i className="fa fa-school me-1"></i>Escolas e alunos ({escolas.length})
             </button>
           </div>
           <input
             type="text" className="form-control form-control-sm w-auto"
             style={{ background: '#1f2937', color: '#f9fafb', border: '1px solid #374151', minWidth: 220 }}
-            placeholder={aba === 'usuarios' ? 'Buscar por nome ou e-mail...' : 'Buscar por aluno, inscricao ou escola...'}
+            placeholder={aba === 'usuarios' ? 'Buscar por nome ou e-mail...' : 'Buscar escola ou aluno...'}
             value={busca} onChange={e => setBusca(e.target.value)}
           />
         </div>
@@ -340,53 +367,93 @@ export default function AdminPanel() {
 
         ) : (
 
-          /* ── Tabela de Alunos ── */
-          <div className="card" style={{ borderRadius: 12, border: 'none', background: '#1f2937', overflow: 'hidden' }}>
-            <table className="table table-dark table-hover mb-0"
-              style={{ '--bs-table-bg': '#1f2937', '--bs-table-hover-bg': '#374151' }}>
-              <thead style={{ background: '#111827' }}>
-                <tr>
-                  <th className="text-secondary fw-normal py-3 ps-4">Foto</th>
-                  <th className="text-secondary fw-normal py-3">Aluno</th>
-                  <th className="text-secondary fw-normal py-3">Inscricao</th>
-                  <th className="text-secondary fw-normal py-3">Telefone</th>
-                  <th className="text-secondary fw-normal py-3">Escola / Usuário</th>
-                  <th className="text-secondary fw-normal py-3">Data</th>
-                  <th className="text-secondary fw-normal py-3">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {alunosFiltrados.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center text-secondary py-4">Nenhum aluno encontrado</td></tr>
-                ) : alunosFiltrados.map(a => (
-                  <tr key={a.id}>
-                    <td className="ps-4">
-                      {a.foto
-                        ? <img src={resolveMediaUrl(a.foto)} width={36} height={36}
-                            style={{ borderRadius: '50%', objectFit: 'cover' }} alt={a.nome} />
-                        : <span className="text-secondary"><i className="fa fa-user-circle fa-2x"></i></span>
-                      }
-                    </td>
-                    <td className="fw-medium">{a.nome}</td>
-                    <td className="text-secondary">{a.numero_inscricao}</td>
-                    <td className="text-secondary">{a.telefone}</td>
-                    <td>
-                      <div className="small">{a.usuario_nome}</div>
-                      <div className="text-secondary" style={{ fontSize: 11 }}>{a.usuario_email}</div>
-                    </td>
-                    <td className="text-secondary small">
-                      {a.criado_em ? new Date(a.criado_em).toLocaleDateString('pt-BR') : '—'}
-                    </td>
-                    <td>
-                      <button onClick={() => deletarAluno(a.id, a.nome)}
-                        className="btn btn-sm btn-outline-danger" title="Remover aluno">
-                        <i className="fa fa-trash"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="row g-3">
+            <div className="col-lg-4">
+              <div className="card h-100" style={{ borderRadius: 12, border: 'none', background: '#1f2937', overflow: 'hidden' }}>
+                <div className="p-3" style={{ borderBottom: '1px solid #374151' }}>
+                  <h6 className="text-white mb-1">Escolas</h6>
+                  <small className="text-secondary">{escolasFiltradas.length} escola{escolasFiltradas.length !== 1 ? 's' : ''}</small>
+                </div>
+                <div style={{ maxHeight: 560, overflowY: 'auto' }}>
+                  {escolasFiltradas.length === 0 ? (
+                    <div className="text-center text-secondary py-4 px-3">Nenhuma escola encontrada</div>
+                  ) : escolasFiltradas.map(escola => (
+                    <button
+                      key={escola.id}
+                      type="button"
+                      onClick={() => carregarAlunosDaEscola(escola)}
+                      className={`w-100 text-start border-0 px-3 py-3 ${escolaSelecionada?.id === escola.id ? 'bg-warning text-dark' : 'text-white'}`}
+                      style={{ background: escolaSelecionada?.id === escola.id ? undefined : '#1f2937', borderBottom: '1px solid #374151' }}>
+                      <div className="d-flex justify-content-between gap-3">
+                        <div>
+                          <div className="fw-semibold">{escola.nome}</div>
+                          <div className={escolaSelecionada?.id === escola.id ? 'text-dark opacity-75 small' : 'text-secondary small'}>{escola.email}</div>
+                        </div>
+                        <span className={`badge align-self-start ${escolaSelecionada?.id === escola.id ? 'bg-dark text-warning' : 'bg-secondary'}`}>
+                          {escola.total_alunos || 0}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-8">
+              <div className="card" style={{ borderRadius: 12, border: 'none', background: '#1f2937', overflow: 'hidden' }}>
+                <div className="d-flex justify-content-between align-items-center gap-3 p-3" style={{ borderBottom: '1px solid #374151' }}>
+                  <div>
+                    <h6 className="text-white mb-1">{escolaSelecionada ? 'Alunos de ' + escolaSelecionada.nome : 'Selecione uma escola'}</h6>
+                    <small className="text-secondary">{escolaSelecionada ? alunosFiltrados.length + ' aluno' + (alunosFiltrados.length !== 1 ? 's' : '') : 'Abra uma escola para ver seus alunos'}</small>
+                  </div>
+                </div>
+
+                {!escolaSelecionada ? (
+                  <div className="text-center text-secondary py-5">Selecione uma escola na lista ao lado.</div>
+                ) : alunosFiltrados.length === 0 ? (
+                  <div className="text-center text-secondary py-5">Nenhum aluno encontrado nesta escola.</div>
+                ) : (
+                  <table className="table table-dark table-hover mb-0"
+                    style={{ '--bs-table-bg': '#1f2937', '--bs-table-hover-bg': '#374151' }}>
+                    <thead style={{ background: '#111827' }}>
+                      <tr>
+                        <th className="text-secondary fw-normal py-3 ps-4">Foto</th>
+                        <th className="text-secondary fw-normal py-3">Aluno</th>
+                        <th className="text-secondary fw-normal py-3">Inscricao</th>
+                        <th className="text-secondary fw-normal py-3">Telefone</th>
+                        <th className="text-secondary fw-normal py-3">Data</th>
+                        <th className="text-secondary fw-normal py-3">Acoes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {alunosFiltrados.map(a => (
+                        <tr key={a.id}>
+                          <td className="ps-4">
+                            {a.foto
+                              ? <img src={resolveMediaUrl(a.foto)} width={36} height={36}
+                                  style={{ borderRadius: '50%', objectFit: 'cover' }} alt={a.nome} />
+                              : <span className="text-secondary"><i className="fa fa-user-circle fa-2x"></i></span>
+                            }
+                          </td>
+                          <td className="fw-medium">{a.nome}</td>
+                          <td className="text-secondary">{a.numero_inscricao}</td>
+                          <td className="text-secondary">{a.telefone}</td>
+                          <td className="text-secondary small">
+                            {a.criado_em ? new Date(a.criado_em).toLocaleDateString('pt-BR') : '-'}
+                          </td>
+                          <td>
+                            <button onClick={() => deletarAluno(a.id, a.nome)}
+                              className="btn btn-sm btn-outline-danger" title="Remover aluno">
+                              <i className="fa fa-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
