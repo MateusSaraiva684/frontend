@@ -3,10 +3,17 @@ import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Toast from '../components/Toast'
 import { useAlunos } from '../hooks/useAlunos'
+import { useAuth } from '../services/AuthContext'
 import { resolveMediaUrl } from '../services/api'
 import api from '../services/api'
+import {
+  getExternalIdReconhecimento,
+  getSchoolIdReconhecimento,
+  getStatusReconhecimentoAluno,
+} from '../services/reconhecimento'
 
 export default function Alunos() {
+  const { usuario } = useAuth()
   const [turmaSelecionada, setTurmaSelecionada] = useState('')
   const [busca, setBusca] = useState('')
   const [turmas, setTurmas] = useState([])
@@ -154,6 +161,20 @@ export default function Alunos() {
                     </div>
                   )}
                   <div className="card-body">
+                    {(() => {
+                      const statusReconhecimento = getStatusReconhecimentoAluno(aluno, usuario)
+                      const schoolId = getSchoolIdReconhecimento(aluno, usuario)
+                      return (
+                        <div className="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
+                          <span className={`badge ${statusReconhecimento.badge}`} title={statusReconhecimento.detail}>
+                            {statusReconhecimento.label}
+                          </span>
+                          <span className="badge bg-light text-dark border text-break" title="school_id usado pelo recognition-service">
+                            {schoolId || 'sem school_id'}
+                          </span>
+                        </div>
+                      )
+                    })()}
                     <h6 className="card-title fw-semibold mb-1">{aluno.nome}</h6>
                     <p className="small text-primary fw-semibold mb-1">
                       Inscrição: {aluno.numero_inscricao}
@@ -168,6 +189,11 @@ export default function Alunos() {
                     <p className="text-muted small mb-3">
                       <i className="fa fa-phone me-1"></i>{aluno.telefone}
                     </p>
+                    {getExternalIdReconhecimento(aluno) && (
+                      <p className="text-muted small mb-3 text-break">
+                        <i className="fa fa-fingerprint me-1"></i>{getExternalIdReconhecimento(aluno)}
+                      </p>
+                    )}
                     <div className="d-flex gap-2 flex-wrap">
                       <Link to={`/presencas?aluno=${aluno.id}`}
                         className="btn btn-success btn-sm flex-fill">
@@ -181,6 +207,16 @@ export default function Alunos() {
                         className="btn btn-danger btn-sm flex-fill">
                         <i className="fa fa-trash me-1"></i>Remover
                       </button>
+                      {usuario?.is_superuser && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm w-100"
+                          disabled
+                          title="Nao ha endpoint SaaS confirmado para disparar sync manual de reconhecimento facial."
+                        >
+                          <i className="fa fa-rotate me-1"></i>Sync facial indisponivel
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

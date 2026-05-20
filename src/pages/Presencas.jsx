@@ -21,6 +21,7 @@ function origemBadge(origem) {
 function statusBadge(status) {
   if (status === 'confirmado') return 'bg-success'
   if (status === 'pendente') return 'bg-warning text-dark'
+  if (status === 'duplicada' || status === 'duplicate') return 'bg-secondary'
   return 'bg-danger'
 }
 
@@ -33,11 +34,16 @@ export default function Presencas() {
   const [registrando, setRegistrando] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
+  const [somenteFacial, setSomenteFacial] = useState(false)
 
   const alunoSelecionado = useMemo(
     () => alunos.find(aluno => String(aluno.id) === String(alunoId)),
     [alunos, alunoId],
   )
+
+  const historicoFiltrado = useMemo(() => (
+    somenteFacial ? historico.filter(presenca => presenca.origem === 'facial') : historico
+  ), [historico, somenteFacial])
 
   async function carregarHistorico(id = alunoId) {
     if (!id) {
@@ -160,7 +166,18 @@ export default function Presencas() {
                 <h6 className="fw-semibold mb-0">
                   <i className="fa fa-clock-rotate-left text-primary me-2"></i>Historico
                 </h6>
-                <span className="badge bg-secondary fw-normal">{historico.length}</span>
+                <div className="d-flex align-items-center gap-3 flex-wrap">
+                  <label className="form-check form-switch mb-0 small text-muted">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={somenteFacial}
+                      onChange={e => setSomenteFacial(e.target.checked)}
+                    />
+                    Reconhecimento facial
+                  </label>
+                  <span className="badge bg-secondary fw-normal">{historicoFiltrado.length}</span>
+                </div>
               </div>
 
               {!alunoId ? (
@@ -172,31 +189,39 @@ export default function Presencas() {
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary"></div>
                 </div>
-              ) : historico.length === 0 ? (
+              ) : historicoFiltrado.length === 0 ? (
                 <div className="text-center text-muted py-5">
                   <i className="fa fa-calendar-xmark fa-3x mb-3 d-block"></i>
-                  Nenhuma presenca registrada.
+                  Nenhuma presenca registrada para o filtro atual.
                 </div>
               ) : (
                 <div className="table-responsive">
                   <table className="table table-hover align-middle mb-0">
                     <thead className="table-light">
                       <tr>
+                        <th>Aluno</th>
                         <th>Data</th>
                         <th>Origem</th>
+                        <th>Camera</th>
                         <th>Status</th>
                         <th>Confianca</th>
+                        <th>Notificacao</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {historico.map(presenca => (
+                      {historicoFiltrado.map(presenca => (
                         <tr key={presenca.id}>
+                          <td>
+                            <div className="fw-medium">{alunoSelecionado?.nome || `ID ${presenca.aluno_id}`}</div>
+                            <div className="small text-muted">{alunoSelecionado?.numero_inscricao || '-'}</div>
+                          </td>
                           <td>{formatarData(presenca.timestamp)}</td>
                           <td>
                             <span className={`badge ${origemBadge(presenca.origem)}`}>
-                              {presenca.origem}
+                              {presenca.origem === 'facial' ? 'Reconhecimento facial' : 'Manual'}
                             </span>
                           </td>
+                          <td><span className="text-muted">Nao exposta</span></td>
                           <td>
                             <span className={`badge ${statusBadge(presenca.status)}`}>
                               {presenca.status}
@@ -207,6 +232,7 @@ export default function Presencas() {
                               ? `${Math.round(presenca.confianca * 100)}%`
                               : '-'}
                           </td>
+                          <td><span className="badge bg-secondary">Nao exposta</span></td>
                         </tr>
                       ))}
                     </tbody>

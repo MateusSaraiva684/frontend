@@ -22,11 +22,11 @@ export default function Navbar() {
 
   return (
     <nav className="navbar navbar-dark bg-dark">
-      <div className="container">
-        <Link className="navbar-brand fw-semibold" to="/alunos">
+      <div className="container d-flex flex-wrap align-items-center gap-2 py-2">
+        <Link className="navbar-brand fw-semibold me-auto" to="/alunos">
           <i className="fa fa-school me-2"></i>Sistema Escolar
         </Link>
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap justify-content-start justify-content-md-end">
           <span className="text-secondary small d-none d-md-inline">{usuario?.nome}</span>
           {link('/alunos', 'Alunos', 'fa-users')}
           {link('/presencas', 'Presencas', 'fa-clipboard-check')}
